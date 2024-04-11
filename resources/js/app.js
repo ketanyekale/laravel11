@@ -6,7 +6,8 @@
 
 import './bootstrap';
 import { createApp } from 'vue';
-
+import { CometChatUIKit } from "@cometchat/chat-uikit-vue";
+import { UIKitSettingsBuilder } from '@cometchat/uikit-shared';
 /**
  * Next, we will create a fresh Vue application instance. You may then begin
  * registering components with the application instance so they are ready
@@ -15,8 +16,12 @@ import { createApp } from 'vue';
 
 const app = createApp({});
 
-import ExampleComponent from './components/ExampleComponent.vue';
-app.component('example-component', ExampleComponent);
+
+import { CometChatConversationsWithMessages } from "@cometchat/chat-uikit-vue";
+app.component('cometchat-conversations-with-messages', CometChatConversationsWithMessages);
+
+// import ExampleComponent from './components/ExampleComponent.vue';
+// app.component('example-component', ExampleComponent);
 
 /**
  * The following block of code may be used to automatically register your
@@ -36,4 +41,28 @@ app.component('example-component', ExampleComponent);
  * scaffolding. Otherwise, you will need to add an element yourself.
  */
 
-app.mount('#app');
+
+
+//create the builder
+const UIKitSettings = new UIKitSettingsBuilder()
+  .setAppId(import.meta.env.VITE_COMETCHAT_APP_ID)
+  .setRegion(import.meta.env.VITE_COMETCHAT_REGION)
+  .build();
+
+CometChatUIKit.init(UIKitSettings)?.then(()=>{
+    CometChatUIKit.getLoggedinUser().then(user => {
+        if(!user){
+            console.log({CometChatAuthToken})            //Login user
+            CometChatUIKit.loginWithAuthToken(CometChatAuthToken).then(user => {
+                console.log("Login Successful:", { user });
+                //mount your app
+                app.mount('#app');
+            }).catch(console.log);
+        } else {
+            //user already logged in
+            //mount your app
+            app.mount('#app');
+        }
+    }).catch(console.log);
+})
+

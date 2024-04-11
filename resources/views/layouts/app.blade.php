@@ -75,10 +75,11 @@
                 </div>
             </div>
         </nav>
-
+        
         <main class="py-4">
             @yield('content')
         </main>
+        <cometchat-conversations-with-messages />
     </div>
 </body>
 </html>
