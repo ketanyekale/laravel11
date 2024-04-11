@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\ThrottlesLogins;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
@@ -162,7 +163,28 @@ class LoginController extends Controller
      */
     protected function authenticated(Request $request, $user)
     {
-        //
+        $response = Http::withHeaders([
+            'apiKey' => env('COMETCHAT_APIKEY'),
+        ])->post(env('COMETCHAT_BASE_URL')."users/".$user->id."/auth_tokens");
+        $responseBody = json_decode($response->getBody(),true);
+        if(
+            !empty($responseBody['error']) 
+            && !empty($responseBody['error']['code']) 
+            && $responseBody['error']['code']=='ERR_UID_NOT_FOUND'
+            ){
+                $response = Http::withHeaders([
+                    'apiKey' => env('COMETCHAT_APIKEY'),
+                ])->post(env('COMETCHAT_BASE_URL')."users", [
+                    'uid' => $user->id,
+                    'name' => $user->name,
+                    'withAuthToken'=>true
+                ]);
+                $responseBody = json_decode($response->getBody(),true);
+        }
+        if(!empty($responseBody['data'])){
+            $authToken = $responseBody['data']['authToken'];
+        }
+        $request->session()->put('cometchat_authToken', $authToken);
     }
 
     /**

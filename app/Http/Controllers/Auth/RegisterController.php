@@ -12,6 +12,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
 
 class RegisterController extends Controller
 {
@@ -128,6 +129,17 @@ class RegisterController extends Controller
      */
     protected function registered(Request $request, $user)
     {
-        //
+        $response = Http::withHeaders([
+            'apiKey' => env('COMETCHAT_APIKEY'),
+        ])->post(env('COMETCHAT_BASE_URL')."users", [
+            'uid' => $user->id,
+            'name' => $user->name,
+            'withAuthToken'=>true
+        ]);
+        $responseBody = json_decode($response->getBody(),true);
+        if(!empty($responseBody['data'])){
+            $authToken = $responseBody['data']['authToken'];
+        $request->session()->put('cometchat_authToken', $authToken);
+        }
     }
 }
